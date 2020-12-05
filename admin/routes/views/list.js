@@ -55,7 +55,8 @@ exports = module.exports = function(req, res) {
 
 	var renderView = function() {
 
-		var query = req.list.paginate({ filters: queryFilters, page: req.params.page, perPage: req.list.get('perPage') }).sort(sort.by);
+                // pagination patch part 1 of 2
+		var query = req.list.model.find({});
 
 		req.list.selectColumns(query, columns);
 
@@ -73,12 +74,18 @@ exports = module.exports = function(req, res) {
 			return '/keystone/' + req.list.path + (p ? '/' + p : '') + (params ? '?' + params : '');
 		};
 
-		query.exec(function(err, items) {
+		query.exec(function(err, _items) {
 
 			if (err) {
 				console.log(err);
 				return res.status(500).send('Error querying items:<br><br>' + JSON.stringify(err));
 			}
+
+                        // pagination patch part 2 of 2
+                        const items = {
+                          results: _items,
+                          total: _items.length,
+                        };
 
 			// if there were results but not on this page, reset the page
 			if (req.params.page && items.total && !items.results.length) {
